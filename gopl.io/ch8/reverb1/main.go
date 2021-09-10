@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Listening at localhost:%d\n", *flagPort)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
