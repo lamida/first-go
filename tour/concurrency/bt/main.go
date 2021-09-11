@@ -14,14 +14,35 @@ func Walk(t *tree.Tree, ch chan int) {
 	}
 }
 
+func Walk2(t *tree.Tree, ch chan int) {
+	defer close(ch)
+	var walk func(t *tree.Tree)
+	walk = func(t *tree.Tree) {
+		if t != nil {
+			walk(t.Left)
+			ch <- t.Value
+			walk(t.Right)
+		}
+	}
+	walk(t)
+}
+
 func Same(t1, t2 *tree.Tree) bool {
 	ch1 := make(chan int)
-	go Walk(t1, ch1)
+	go Walk2(t1, ch1)
+
 	ch2 := make(chan int)
-	go Walk(t2, ch2)
-	for i := 0; i < 10; i++ {
-		a, b := <-ch1, <-ch2
-		fmt.Println(a, b)
+	go Walk2(t2, ch2)
+
+	for {
+		a, ok := <-ch1
+		if !ok {
+			break
+		}
+		b, ok := <-ch2
+		if !ok {
+			return false
+		}
 		if a != b {
 			return false
 		}
@@ -32,10 +53,9 @@ func Same(t1, t2 *tree.Tree) bool {
 func main() {
 	ch := make(chan int)
 	t := tree.New(1)
-	fmt.Println(t.String())
-	go Walk(t, ch)
-	for i := 0; i < 10; i++ {
-		fmt.Println(<-ch)
+	go Walk2(t, ch)
+	for c := range ch {
+		fmt.Println(c)
 	}
 
 	fmt.Println(Same(tree.New(1), tree.New(1)))
